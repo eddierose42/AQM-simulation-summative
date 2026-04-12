@@ -17,7 +17,7 @@ max_iters = int(round(Tmax/dt))
 
 ## boundary conditions
 
-mp = int(N/2) #midpoint
+mp = int(N/2) # midpoint
 #u[mp-5:mp+5, mp-5:mp+5] = 100
 
 u[:, 0] = 100

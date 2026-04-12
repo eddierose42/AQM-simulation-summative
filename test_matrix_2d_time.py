@@ -76,6 +76,10 @@ def CalculMat2D_time(N):
 
     return  A
 
+
+
+
+
 def vec_to_grid(r, N):
     u = np.zeros([N, N])
     for n in range(N**2): # convert vector indexed 1-dimensionally to 2d array
