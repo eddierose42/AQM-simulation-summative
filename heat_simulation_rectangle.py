@@ -9,11 +9,11 @@ Nx = 50
 Ny = 50
 D = 2e-5 # constant for air. units m^2 / s
 u0 = 20
-Tmax = 2000
+Tmax = 4000
 
 dx = Lx/(Nx-1)
 dy = Ly/(Ny-1)
-dt = min(dx**2 / (4*D), dy**2 / (4*D)) #CFL condition
+dt = 1 / (2*D* (1/dx**2 + 1/ dy**2)) #CFL condition
 
 u = np.zeros([Ny, Nx]) + u0
 max_iters = int(round(Tmax/dt))
@@ -34,11 +34,9 @@ Y = np.linspace(0, Ly, Ny)
 
 #u[20:30, -1] = 50
 #u[20:30, 0] = 0
-
-
-#mpx, mpy = int(Nx/2), int(Ny/2) #midpoint
-#u[mpy-5:mpy+5, mpx-5:mpx+5] = 100
-u[20:30, 20:30] = 100
+mpx, mpy = int(Nx/2), int(Ny/2) #midpoint
+u[mpy-5:mpy+5, mpx-5:mpx+5] = 100
+#u[20:30, 20:30] = 100
 
 def construct_matrix_dirichlet(): # using global variables
     A = np.zeros([Nx*Ny, Nx*Ny])
@@ -172,7 +170,6 @@ U_vec = grid_to_vec(u)
 
 print(f"\nRunning for {max_iters} iterations")
 count = 0
-
 
 while count < max_iters+1:
     U_vec = A_mat @ U_vec
