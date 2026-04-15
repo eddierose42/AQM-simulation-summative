@@ -8,7 +8,7 @@ N = 50
 
 D = 1 # 110
 u0 = 0
-Tmax = 1000
+Tmax = 100
 
 h = L/(N-1)
 dt = 0.4 * (h**2 / (4*D))
@@ -18,9 +18,9 @@ max_iters = int(round(Tmax/dt))
 ## boundary conditions
 
 mp = int(N/2) # midpoint
-#u[mp-5:mp+5, mp-5:mp+5] = 100
+u[mp-5:mp+5, mp-5:mp+5] = 100
 
-u[:, 0] = 100
+#u[:, 0] = 100
 #u[mp-5:mp+5, -1] = 40
 #u[:, 0] = 100
 

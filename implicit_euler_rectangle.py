@@ -35,7 +35,7 @@ u[:, -1] = F_right(Y)
 #u[mpy-5:mpy+5, mpx-5:mpx+5] = 100
 
 
-def construct_laplacian_matrix_interiod(): # implicit euler
+def construct_laplacian_matrix_interior(): # implicit euler
     A = np.zeros([Nx*Ny, Nx*Ny])
 
     rx = D * dt / dx**2
@@ -53,7 +53,7 @@ def construct_laplacian_matrix_interiod(): # implicit euler
 
     return A
 
-def construct_laplacian_matrix(): # using global variables
+def construct_laplacian_matrix_dirichlet(): # using global variables
     A = np.zeros([Nx*Ny, Nx*Ny])
 
     rx = D * dt / dx**2
@@ -97,52 +97,6 @@ def construct_laplacian_matrix(): # using global variables
 
             ## wraparound?
     return A
-
-def construct_laplacian_matrix_homo_neumann(): # using global variables
-    A = np.zeros([Nx*Ny, Nx*Ny])
-
-    rx = D * dt / dx**2
-    ry = D * dt / dy**2
-    A_const = 1 + 2 * (rx + ry)
-    
-    for j in range(0, Ny):
-        for i in range(0, Nx):
-            n = j*Nx + i
-
-            if j == 0 and i == 0: #bottom-left corner
-                A[n][n] = u[j,i]
-
-            elif j == 0 and i == Nx-1: #bottom-right corner
-                A[n][n] = u[j,i]
-
-            elif j == Ny-1 and i == 0: #top-left corner
-                A[n][n] = u[j,i]
-
-            elif j == Ny-1 and i == Nx-1: #top-right corner
-                A[n][n] = u[j,i]
-
-            elif j == 0: #bottom
-                A[n][n] = u[j,i]
-
-            elif j == Ny-1: #top
-                A[n][n] = u[j,i]
-
-            elif i == 0: #left
-                A[n][n] = u[j,i]
-
-            elif i == Nx-1: #right
-                A[n][n] = u[j,i]
-
-            else: #interior points
-                A[n][n] = A_const #U(i,j)
-                A[n][n-Nx] = -ry #U(i,j-1)
-                A[n][n-1] = -rx #U(i-1,j)
-                A[n][n+1] = -rx #U(i+1,j)
-                A[n][n+Nx] = -ry #U(i,j+1)
-
-            ## wraparound?
-    return A
-
 
 def boundary_vector_dirichlet():
     b = np.zeros(Nx*Ny)
@@ -219,6 +173,8 @@ def grid_to_vec(u):
         j = n // Nx
         r[n] = u[j,i]
     return r
+
+
 
 data = [u.copy()]
 #A_mat = construct_laplacian_matrix()

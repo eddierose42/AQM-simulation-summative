@@ -21,10 +21,10 @@ max_iters = int(round(Tmax/dt))
 
 ## boundary conditions
 
-u[0, :] = 0 #np.linspace(-100, 100, N)
-u[-1, :] = 100 #np.linspace(-100, 100, N)
-u[:, 0] = 0 #np.linspace(0, -100, N)
-u[:, -1] = 30 #np.linspace(0, -100, N)
+u[0, :] = np.linspace(-100, 100, N)
+u[-1, :] = np.linspace(-100, 100, N)
+u[:, 0] = np.linspace(0, -100, N)
+u[:, -1] = np.linspace(0, -100, N)
 
 def right_boundary(): # dirchlet
     return 1
