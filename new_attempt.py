@@ -89,7 +89,6 @@ def construct_matrix(Nx=Nx, Ny=Ny, dx=dx, dy=dy, dt=dt):
 
     return A
 
-
 A = construct_matrix()
 A_inv = np.linalg.inv(A)
 b = construct_b(g)
