@@ -9,7 +9,7 @@ Ly = 3 #m
 
 D = 2e-5 # constant for  air = 2e-5 (m^2 / s)
 u0 = 20 # room temperature (°C)
-Tmax = 20000 # time max (s)
+Tmax = 2000 # time max (s)
 
 
 Nx = 50
@@ -21,19 +21,21 @@ dx = Lx/(Nx-1)
 dy = Ly/(Ny-1)
 dt = 0.5
 
-k = -0.01*dt # constant for badly insulated wall
+Ctop = -5 # constant for badly insulated wall
+Cright = 0
+Cbottom = 0
 
-g2 = lambda x,y,t: -k # top - heat loss from badly insulated wall
-g3 = lambda x,y,t: 0 # right - insulated wall
-g4 = lambda x,y,t: 0 # bottom - insulated wall
-g1 = lambda x,y,t: 0 # top - heat loss from badly insulated wall
+g2 = lambda x,y,t: Ctop*dt # top - heat loss from badly insulated wall
+g3 = lambda x,y,t: Cright*dt # right - insulated wall
+g4 = lambda x,y,t: Cbottom*dt # bottom - insulated wall
+#g1 = lambda x,y,t: 0 # 0
 
 # left - piecewise including log burner
 
 def g1(x,y,t):
     if not isinstance(y, np.ndarray):
         y = np.array(y)
-    dxdt =  (dt*5e3) / (-0.025*0.25)    * -1   #35000 Q / -kA (conductivity of air; area=0.25)
+    dxdt =  (dt*5e3) / (-0.025)  # - t_loss * -1   #35000 Q / -kA (conductivity of air; area=0.25)
     new_y = np.where((y > 1) & (y <= 2), dxdt, y)
     return new_y 
 
@@ -46,28 +48,65 @@ def construct_b(t=0, g1=g1, g2=g2, g3=g3, g4=g4, Nx=Nx, Ny=Ny, dx=dx, dy=dy):
     j = 0
     n = n_idx(i,j)
     x, y = dx*i, dy*j
-    b[n] += -2 * dy * g4(x,y,t) 
+    b[n] += -2 * dy * g4(x,y,t) * -1 ######
 
     # top
     i = np.arange(0,Nx)
     j = Ny-1
     n = n_idx(i,j)
     x, y = dx*i, dy*j
-    b[n] += 2 * dy * g2(x,y,t) * -1 ######
+    b[n] += 2 * dy * g2(x,y,t) 
 
     # left
     i = 0
     j = np.arange(0,Ny)
     n = n_idx(i,j)
     x, y = dx*i, dy*j
-    b[n] += -2 * dx * g1(x,y,t) 
+    b[n] += -2 * dx * g1(x,y,t) * -1 ######
 
     # right
     i = Nx-1
     j = np.arange(0,Ny)
     n = n_idx(i,j)
     x, y = dx*i, dy*j
-    b[n] += 2 * dx * g3(x,y,t) * -1 ######
+    b[n] += 2 * dx * g3(x,y,t) 
+
+    return b
+
+def construct_b_alt(t=0, g1=g1, g2=g2, g3=g3, g4=g4, Nx=Nx, Ny=Ny, dx=dx, dy=dy):
+    b = np.zeros(Nx*Ny)
+    n_idx = lambda i, j: j*Nx + i
+    rx = D * dt / dx**2
+    ry = D * dt / dy**2
+
+
+    # bottom
+    i = np.arange(0,Nx)
+    j = 0
+    n = n_idx(i,j)
+    x, y = dx*i, dy*j
+    b[n] += 4 * ry * dy * g4(x,y,t)
+
+    # top
+    i = np.arange(0,Nx)
+    j = Ny-1
+    n = n_idx(i,j)
+    x, y = dx*i, dy*j
+    b[n] += - 4 * ry * dy * g2(x,y,t)  *-1 ## I dont understand why we put -1 here
+
+    # left
+    i = 0
+    j = np.arange(0,Ny)
+    n = n_idx(i,j)
+    x, y = dx*i, dy*j
+    b[n] += 4 * rx * dx * g1(x,y,t)
+
+    # right
+    i = Nx-1
+    j = np.arange(0,Ny)
+    n = n_idx(i,j)
+    x, y = dx*i, dy*j
+    b[n] += -4 * rx * dx * g3(x,y,t) *-1 ## I dont understand why we put -1 here
 
     return b
 
@@ -106,13 +145,14 @@ def construct_matrix(Nx=Nx, Ny=Ny, dx=dx, dy=dy, dt=dt):
 
     return A
 
+
 A = construct_matrix()
 A_inv = np.linalg.inv(A)
-b = construct_b()
+b = construct_b_alt()
 
 u = np.zeros([Ny, Nx]) + u0
 
-u[:, 3:7] = 100
+u[1:-1, 0] = 30
 
 data = [u.copy()]
 
@@ -123,7 +163,7 @@ count = 0
 print(f"\nRunning for {int(max_iters)} iterations")
 
 while count < max_iters+1:
-    u = (A_inv @ (u.flatten() - b)).reshape(Ny, Nx)
+    u = (A_inv @ (u.flatten() + b)).reshape(Ny, Nx)
     data.append(u)
     count += 1
 
@@ -137,7 +177,7 @@ X = np.linspace(0,Lx,Nx+1)
 Y = np.linspace(0,Ly,Ny+1)
 
 fig, axis = plt.subplots()
-pcm = axis.pcolormesh(X, Y, data[0], cmap=plt.cm.jet, vmin=np.array(data).min(), vmax=np.array(data).max())#vmin=-100, vmax=100)
+pcm = axis.pcolormesh(X, Y, data[0], cmap=plt.cm.jet, vmin=min(0, np.array(data).min()), vmax=np.array(data).max())#vmin=-100, vmax=100)
 axis.set_aspect('equal')
 plt.colorbar(pcm, ax=axis, shrink=0.65)
 
